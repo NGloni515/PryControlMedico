@@ -1,17 +1,23 @@
 package com.medico.app.web.controllers;
 
 import com.medico.app.web.models.dao.IPacienteDAO;
+import com.medico.app.web.models.entities.Medico;
 import com.medico.app.web.models.entities.Paciente;
 import com.medico.app.web.models.services.IPacienteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.support.SessionStatus;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import javax.transaction.Transactional;
+import javax.validation.Valid;
+
 import java.util.List;
 
 @Controller
@@ -26,15 +32,22 @@ public class PacienteController {
     public String create(Model model){
         Paciente paciente=new Paciente();
         model.addAttribute("paciente",paciente);
+		model.addAttribute("title","Agregar nuevo paciente");
         return "paciente/form";
     }
 
     @PostMapping(value="/save" )
-    public String save(Paciente paciente,Model model){
+    public String save(@Valid Paciente paciente,  BindingResult result,Model model, RedirectAttributes message, SessionStatus session){
         try{
-            service.save(paciente);
+        	if(result.hasErrors()) {        		
+        		return "paciente/form";
+        	} 
+			String msg = paciente.getIdpersona() == null ? paciente.getNombre() + " ha sido agregado a la lista de pacientes." : paciente.getNombre() + paciente.getApellido() + " ha sido actualizado.";
+			service.save(paciente);
+			session.setComplete();            
+            message.addFlashAttribute("success", msg);
         }catch (Exception ex){
-            model.addAttribute("error: ",ex.toString());
+        	message.addFlashAttribute("error",ex.toString());
         }
         return "redirect:/paciente/list";
     }
@@ -52,6 +65,7 @@ public class PacienteController {
                          Model model){
         Paciente paciente=service.findById(id);
         model.addAttribute("paciente",paciente);
+        model.addAttribute("title","Listado de pacientes");
         return "paciente/form";
     }
 

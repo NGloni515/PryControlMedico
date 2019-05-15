@@ -22,7 +22,7 @@ public class Medico extends Persona implements Serializable{
 	@NotEmpty
 	private String licencia;
 
-	@Size(max = 255)
+	@Size(max = 60)
 	@Column(name = "ESPECIALIDAD")
 	private String especialidad;
 	
